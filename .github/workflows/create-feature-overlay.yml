@@ -1,6 +1,7 @@
 name: Create Feature Overlay
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - 'feature/**'
