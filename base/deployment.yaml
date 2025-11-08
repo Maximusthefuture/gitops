@@ -30,11 +30,11 @@ spec:
           value: "preview"
         resources:
           requests:
-            memory: "128Mi"
-            cpu: "100m"
-          limits:
             memory: "256Mi"
-            cpu: "200m"
+            cpu: "500m"
+          limits:
+            memory: "512Mi"
+            cpu: "1000m"
         # Health checks для Java приложения
         livenessProbe:
           httpGet:
