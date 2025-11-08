@@ -71,7 +71,6 @@ on:
     paths-ignore:
       - 'envs/**'
 ```
-
 2. Добавьте проверку в commit message:
 ```yaml
 if: "!contains(github.event.head_commit.message, '[skip ci]')"

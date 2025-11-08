@@ -1,0 +1,44 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: preview-testik1
+
+resources:
+- ../../base
+
+# Переопределение образа для feature ветки
+images:
+- name: java-app
+  newName: java-app
+  newTag: testik1
+
+patches:
+# Обновление host в Ingress
+- patch: |-
+    - op: replace
+      path: /spec/rules/0/host
+      value: testik1.local
+  target:
+    kind: Ingress
+    name: auth-service
+
+# Обновление переменных окружения
+- patch: |-
+    - op: replace
+      path: /spec/template/spec/containers/0/env/2/value
+      value: "testik1"
+  target:
+    kind: Deployment
+    name: auth-service
+
+commonLabels:
+  environment: preview
+  branch: testik1
+  managed-by: argocd
+  feature: "true"
+
+commonAnnotations:
+  git-branch: "feature/testik1"
+  description: "Preview environment for feature branch testik1"
+  created-by: "argocd-applicationset"
+
