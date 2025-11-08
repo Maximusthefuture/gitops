@@ -8,7 +8,7 @@ spec:
   # Генератор на основе git веток
   - git:
       repoURL: https://github.com/Maximusthefuture/gitops.git
-      revision: HEAD
+      revision: main
       directories:
       - path: envs/feature-*
       requeueAfterSeconds: 180
@@ -34,8 +34,8 @@ spec:
         repoURL: https://github.com/Maximusthefuture/gitops.git
         # Используем имя директории для определения ветки
         # Если директория envs/feature-xxx, то ветка должна быть feature/xxx
-        # Или можно использовать HEAD для текущей ветки, где находится директория
-        targetRevision: HEAD
+        # Или можно использовать main для стабильной ветки с overlay директориями
+        targetRevision: main
         path: '{{path.path}}'
       destination:
         server: https://kubernetes.default.svc
