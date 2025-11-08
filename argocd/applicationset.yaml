@@ -1,0 +1,36 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: preview-environments
+  namespace: argocd
+spec:
+  generators:
+  - list:
+      elements:
+      - env: feature-auth
+      - env: feature-login
+  template:
+    metadata:
+      name: 'preview-{{env}}'
+      labels:
+        type: preview
+        environment: '{{env}}'
+      finalizers:
+      - resources-finalizer.argocd.argoproj.io
+    spec:
+      project: previews
+      source:
+        repoURL: file:///tmp/gitops-demo
+        targetRevision: HEAD
+        path: envs/{{env}}
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: 'preview-{{env}}'
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+        - CreateNamespace=true
+        - PruneLast=true
+

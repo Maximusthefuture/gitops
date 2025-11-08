@@ -1,0 +1,22 @@
+# macOS
+.DS_Store
+._*
+
+# Archives
+*.tar.gz
+*.zip
+
+# Temporary files
+*.tmp
+*.log
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Local git
+.git/
+

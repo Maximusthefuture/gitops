@@ -3,7 +3,7 @@ kind: Kustomization
 
 namespace: preview-feature-login
 
-bases:
+resources:
 - ../../base
 
 patches:

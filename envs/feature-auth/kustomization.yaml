@@ -3,7 +3,7 @@ kind: Kustomization
 
 namespace: preview-feature-auth
 
-bases:
+resources:
 - ../../base
 
 # Можно переопределить образ (когда будет свой)
