@@ -1,0 +1,25 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: preview-feature-login
+
+bases:
+- ../../base
+
+patches:
+- patch: |-
+    - op: replace
+      path: /spec/rules/0/host
+      value: feature-login.local
+  target:
+    kind: Ingress
+    name: auth-service
+
+commonLabels:
+  environment: preview
+  branch: feature-login
+  managed-by: argocd
+
+commonAnnotations:
+  git-branch: "feature/login"
+  description: "Preview environment for login feature"
