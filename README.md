@@ -136,6 +136,16 @@ kubectl get all -n preview-feature-auth
 
 4. ApplicationSet автоматически создаст новое приложение в ArgoCD
 
+## Автоматическое развертывание при пуше в feature ветку
+
+Для автоматического развертывания Java приложения при пуше в feature ветку см. [FEATURE_BRANCHES.md](./FEATURE_BRANCHES.md).
+
+Основные возможности:
+- Автоматическое обнаружение feature веток через ArgoCD ApplicationSet
+- Автоматическая сборка Java приложения через GitHub Actions
+- Автоматическое создание overlay для каждой feature ветки
+- Развертывание в отдельном namespace для каждой ветки
+
 ## Локальная разработка (file://)
 
 Если вы хотите использовать локальный репозиторий без GitHub:

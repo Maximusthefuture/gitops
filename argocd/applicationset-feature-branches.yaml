@@ -1,0 +1,54 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: preview-feature-branches
+  namespace: argocd
+spec:
+  generators:
+  # Генератор на основе git веток
+  - git:
+      repoURL: https://github.com/YOUR_USERNAME/YOUR_REPO.git
+      revision: HEAD
+      directories:
+      - path: envs/feature-*
+      requeueAfterSeconds: 180
+  # Альтернативный генератор на основе списка веток (если git generator не работает)
+  # Можно использовать scmProvider или комбинировать с list generator
+  template:
+    metadata:
+      name: 'preview-{{path.basename}}'
+      labels:
+        type: preview
+        environment: '{{path.basename}}'
+        branch: '{{path.basename}}'
+        app.kubernetes.io/name: 'preview-{{path.basename}}'
+      annotations:
+        branch: '{{path.basename}}'
+        path: '{{path.path}}'
+        argocd.argoproj.io/sync-wave: "0"
+      finalizers:
+      - resources-finalizer.argocd.argoproj.io
+    spec:
+      project: previews
+      source:
+        repoURL: https://github.com/YOUR_USERNAME/YOUR_REPO.git
+        # Используем имя директории для определения ветки
+        # Если директория envs/feature-xxx, то ветка должна быть feature/xxx
+        # Или можно использовать HEAD для текущей ветки, где находится директория
+        targetRevision: HEAD
+        path: '{{path.path}}'
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: 'preview-{{path.basename}}'
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+          allowEmpty: false
+        syncOptions:
+        - CreateNamespace=true
+        - PruneLast=true
+        - ServerSideApply=true
+        - Replace=true
+      revisionHistoryLimit: 3
+

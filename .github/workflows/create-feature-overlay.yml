@@ -1,0 +1,76 @@
+name: Create Feature Overlay
+
+on:
+  push:
+    branches:
+      - 'feature/**'
+    paths:
+      - 'envs/**'
+
+jobs:
+  create-overlay:
+    if: "!contains(github.event.head_commit.message, '[skip ci]')"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract branch name
+        id: branch
+        run: |
+          BRANCH_NAME=${GITHUB_REF#refs/heads/}
+          FEATURE_NAME=${BRANCH_NAME#feature/}
+          echo "branch_name=$BRANCH_NAME" >> $GITHUB_OUTPUT
+          echo "feature_name=$FEATURE_NAME" >> $GITHUB_OUTPUT
+          echo "Branch: $BRANCH_NAME"
+          echo "Feature: $FEATURE_NAME"
+
+      - name: Check if overlay exists
+        id: check
+        run: |
+          if [ -d "envs/feature-${{ steps.branch.outputs.feature_name }}" ]; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+            echo "Overlay already exists"
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+            echo "Overlay does not exist, will create"
+          fi
+
+      - name: Create feature overlay
+        if: steps.check.outputs.exists == 'false'
+        run: |
+          FEATURE_NAME="${{ steps.branch.outputs.feature_name }}"
+          OVERLAY_DIR="envs/feature-$FEATURE_NAME"
+          
+          # Create directory
+          mkdir -p "$OVERLAY_DIR"
+          
+          # Create kustomization.yaml from template
+          sed "s/FEATURE_NAME/$FEATURE_NAME/g" envs/_templates/feature-kustomization.yaml > "$OVERLAY_DIR/kustomization.yaml"
+          
+          echo "Created overlay in $OVERLAY_DIR"
+          cat "$OVERLAY_DIR/kustomization.yaml"
+
+      - name: Commit and push changes
+        if: steps.check.outputs.exists == 'false'
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add envs/feature-${{ steps.branch.outputs.feature_name }}/
+          git commit -m "Auto-create overlay for feature-${{ steps.branch.outputs.feature_name }}" || exit 0
+          git push origin ${{ github.ref }}
+
+      - name: Summary
+        run: |
+          echo "### Overlay Status" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ steps.check.outputs.exists }}" == "true" ]; then
+            echo "✅ Overlay already exists for feature-${{ steps.branch.outputs.feature_name }}" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "✅ Created overlay for feature-${{ steps.branch.outputs.feature_name }}" >> $GITHUB_STEP_SUMMARY
+          fi
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "ArgoCD ApplicationSet will automatically detect the new overlay and create an application." >> $GITHUB_STEP_SUMMARY
+

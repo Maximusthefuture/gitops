@@ -14,9 +14,12 @@ spec:
     spec:
       containers:
       - name: auth-service
-        image: nginx:latest  # Для теста используем nginx
+        image: java-app:latest  # Будет переопределено в overlay
+        imagePullPolicy: Never  # Используем локальные образы из minikube
         ports:
-        - containerPort: 80
+        - containerPort: 8080
+          name: http
+          protocol: TCP
         env:
         # Подключение к staging сервисам (когда они будут)
         - name: USER_SERVICE_URL
@@ -32,16 +35,20 @@ spec:
           limits:
             memory: "256Mi"
             cpu: "200m"
-        # Health checks
+        # Health checks для Java приложения
         livenessProbe:
           httpGet:
-            path: /
-            port: 80
-          initialDelaySeconds: 10
+            path: /actuator/health/liveness
+            port: 8080
+          initialDelaySeconds: 60
           periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
         readinessProbe:
           httpGet:
-            path: /
-            port: 80
-          initialDelaySeconds: 5
+            path: /actuator/health/readiness
+            port: 8080
+          initialDelaySeconds: 30
           periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3

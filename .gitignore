@@ -17,6 +17,9 @@
 *.swo
 *~
 
+# Scripts folder
+scripts/
+
 # Local git
 .git/
 
