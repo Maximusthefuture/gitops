@@ -46,14 +46,21 @@ kubectl describe applicationset preview-feature-branches -n argocd
 
 ### Шаг 2: Настройка Java репозитория
 
+**Важно**: Если Java код находится в подпапке `java-repo/` внутри GitOps репозитория, workflow уже настроен и находится в `.github/workflows/build-java-image.yml`.
+
+Если у вас отдельный Java репозиторий:
+
 1. **Скопируйте файлы** из `java-repo/` в ваш Java репозиторий:
-   - `.github/workflows/build-image.yml`
    - `Dockerfile`
+   - `pom.xml`
+   - `src/` (исходный код)
    - `README.md` (опционально)
 
-2. **Настройте Dockerfile** под ваше приложение
+2. **Создайте workflow** в `.github/workflows/build-image.yml` (скопируйте из `java-repo/.github/workflows/build-image.yml`)
 
-3. **Убедитесь, что приложение**:
+3. **Настройте Dockerfile** под ваше приложение
+
+4. **Убедитесь, что приложение**:
    - Слушает порт 8080
    - Предоставляет health check endpoints (`/actuator/health/liveness`, `/actuator/health/readiness`)
    - Использует Spring Boot Actuator (рекомендуется)
@@ -68,6 +75,14 @@ git checkout -b feature/test-feature
 git commit -am "Test changes"
 git push origin feature/test-feature
 ```
+
+**Важно**: После первого push GitHub Actions создаст overlay и закоммитит его в ту же ветку. Перед следующим pushом выполните:
+
+```bash
+git pull --rebase origin feature/test-feature
+```
+
+Подробнее см. [.github/GIT_WORKFLOW.md](.github/GIT_WORKFLOW.md)
 
 2. **GitHub Actions соберет образ**:
    - Перейдите в Actions в GitHub

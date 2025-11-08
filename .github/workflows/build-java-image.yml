@@ -4,9 +4,13 @@ on:
   push:
     branches:
       - 'feature/**'
+    paths:
+      - 'java-repo/**'
   pull_request:
     branches:
       - 'feature/**'
+    paths:
+      - 'java-repo/**'
   workflow_dispatch:
 
 jobs:
@@ -26,6 +30,7 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
           cache: maven
+          cache-dependency-path: java-repo/pom.xml
 
       - name: Debug information
         run: |
@@ -39,14 +44,17 @@ jobs:
           echo "Repository structure:"
           ls -la
           echo ""
+          echo "Java repo directory:"
+          ls -la java-repo/ 2>/dev/null || echo "java-repo directory not found"
+          echo ""
           echo "Source files:"
-          find src -type f 2>/dev/null || echo "No src directory found"
+          find java-repo/src -type f 2>/dev/null || echo "No src directory found"
           echo ""
           echo "Maven files:"
-          ls -la pom.xml 2>/dev/null || echo "pom.xml not found"
+          ls -la java-repo/pom.xml 2>/dev/null || echo "pom.xml not found"
           echo ""
           echo "Dockerfile:"
-          ls -la Dockerfile 2>/dev/null || echo "Dockerfile not found"
+          ls -la java-repo/Dockerfile 2>/dev/null || echo "Dockerfile not found"
 
       - name: Extract branch name
         id: branch
@@ -63,6 +71,7 @@ jobs:
           echo "Tag: $FEATURE_TAG"
 
       - name: Build with Maven
+        working-directory: java-repo
         run: |
           echo "Building Java application with Maven..."
           mvn clean package -DskipTests
@@ -70,6 +79,7 @@ jobs:
           ls -lh target/*.jar || echo "Warning: JAR file not found"
 
       - name: Verify JAR file exists
+        working-directory: java-repo
         run: |
           echo "Checking for JAR file..."
           JAR_FILE=$(find target -name "*.jar" -type f | head -1)
@@ -86,6 +96,7 @@ jobs:
           echo "JAR_FILE=$JAR_FILE" >> $GITHUB_ENV
 
       - name: Build Docker image
+        working-directory: java-repo
         run: |
           IMAGE_NAME="java-app"
           IMAGE_TAG="${{ steps.branch.outputs.feature_tag }}"
@@ -170,10 +181,4 @@ jobs:
           echo "   minikube image load ${{ env.FULL_IMAGE }}" >> $GITHUB_STEP_SUMMARY
           echo "   \`\`\`" >> $GITHUB_STEP_SUMMARY
           echo "3. ArgoCD will automatically deploy the application" >> $GITHUB_STEP_SUMMARY
-
-      - name: Test (optional)
-        run: |
-          # Запускаем тесты, если нужно
-          # mvn test
-          echo "Tests skipped (uncomment to run tests)"
 

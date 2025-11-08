@@ -1,6 +1,13 @@
-# Java Application Repository
+# Java Spring Boot Application
 
-Этот репозиторий содержит Java приложение, которое автоматически собирается и развертывается при пуше в feature ветки.
+Простое Spring Boot приложение для демонстрации GitOps workflow. Приложение автоматически собирается и развертывается при пуше в feature ветки.
+
+## Структура приложения
+
+Приложение содержит:
+- **REST API** с двумя endpoints: `/` и `/api/hello`
+- **Health checks** через Spring Boot Actuator
+- **Минимальные зависимости** для быстрой сборки
 
 ## Структура проекта
 
@@ -23,7 +30,39 @@ java-repo/
 5. **Загрузка образа**: Образ загружается в minikube (вручную или автоматически)
 6. **ArgoCD**: Автоматически развертывает приложение в новом namespace
 
-## Локальная сборка
+## Локальная разработка
+
+### Запуск приложения локально
+
+```bash
+# Сборка и запуск
+mvn spring-boot:run
+
+# Или сначала собрать JAR
+mvn clean package
+java -jar target/demo-1.0.0.jar
+```
+
+Приложение будет доступно по адресу: http://localhost:8080
+
+### Тестирование endpoints
+
+```bash
+# Главная страница
+curl http://localhost:8080/
+
+# API endpoint
+curl http://localhost:8080/api/hello
+
+# Health check
+curl http://localhost:8080/actuator/health
+
+# Liveness probe
+curl http://localhost:8080/actuator/health/liveness
+
+# Readiness probe
+curl http://localhost:8080/actuator/health/readiness
+```
 
 ### Сборка JAR файла
 
@@ -56,12 +95,30 @@ minikube image load java-app:latest
 - Docker
 - Minikube (для локального развертывания)
 
-## Настройка
+## Описание приложения
 
-1. Обновите `pom.xml` с вашими зависимостями
-2. Настройте `Dockerfile` под ваше приложение
-3. Убедитесь, что приложение слушает порт 8080
-4. Настройте health check endpoints (Spring Boot Actuator)
+### Endpoints
+
+- `GET /` - Главная страница с информацией о приложении
+- `GET /api/hello` - Простой API endpoint с приветствием
+- `GET /actuator/health` - Общий health check
+- `GET /actuator/health/liveness` - Liveness probe для Kubernetes
+- `GET /actuator/health/readiness` - Readiness probe для Kubernetes
+
+### Зависимости
+
+Приложение использует:
+- Spring Boot 3.2.0
+- Spring Web для REST API
+- Spring Boot Actuator для health checks
+- Java 17
+
+### Конфигурация
+
+Все настройки находятся в `src/main/resources/application.properties`:
+- Порт: 8080
+- Health checks включены
+- Логирование настроено
 
 ## Health Checks
 
