@@ -69,6 +69,14 @@ git commit -am "Test changes"
 git push origin feature/test-feature
 ```
 
+**Важно**: После первого push GitHub Actions создаст overlay и закоммитит его в ту же ветку. Перед следующим pushом выполните:
+
+```bash
+git pull --rebase origin feature/test-feature
+```
+
+Подробнее см. [.github/GIT_WORKFLOW.md](.github/GIT_WORKFLOW.md)
+
 2. **GitHub Actions соберет образ**:
    - Перейдите в Actions в GitHub
    - Дождитесь завершения сборки
