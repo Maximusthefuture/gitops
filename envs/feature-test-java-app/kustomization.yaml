@@ -1,0 +1,44 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: preview-test-java-app
+
+resources:
+- ../../base
+
+# Переопределение образа для feature ветки
+images:
+- name: java-app
+  newName: java-app
+  newTag: test-java-app
+
+patches:
+# Обновление host в Ingress
+- patch: |-
+    - op: replace
+      path: /spec/rules/0/host
+      value: test-java-app.local
+  target:
+    kind: Ingress
+    name: auth-service
+
+# Обновление переменных окружения
+- patch: |-
+    - op: replace
+      path: /spec/template/spec/containers/0/env/2/value
+      value: "test-java-app"
+  target:
+    kind: Deployment
+    name: auth-service
+
+commonLabels:
+  environment: preview
+  branch: test-java-app
+  managed-by: argocd
+  feature: "true"
+
+commonAnnotations:
+  git-branch: "feature/test-java-app"
+  description: "Preview environment for feature branch test-java-app"
+  created-by: "argocd-applicationset"
+
