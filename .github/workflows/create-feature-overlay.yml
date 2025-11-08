@@ -6,6 +6,7 @@ on:
       - 'feature/**'
     paths-ignore:
       - 'envs/**'
+      - 'java-repo/**'
 
 permissions:
   contents: write
