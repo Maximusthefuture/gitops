@@ -5,56 +5,42 @@ metadata:
   namespace: argocd
 spec:
   generators:
-  # Matrix generator: Combine list of branches with directory discovery
-  - matrix:
-      generators:
-      # Generator 1: List of feature branches to scan
-      - list:
-          elements:
-          - branch: feature/testik1
-            branchSlug: testik1
-          - branch: feature/auth
-            branchSlug: auth
-          - branch: feature/login
-            branchSlug: login
-          - branch: feature/new-test
-            branchSlug: new-test
-          - branch: feature/test-java-app
-            branchSlug: test-java-app
-          - branch: feature/demo-workflow
-            branchSlug: demo-workflow
-
-      # Generator 2: Check if overlay exists on that feature branch
-      - git:
-          repoURL: https://github.com/Maximusthefuture/gitops.git
-          revision: '{{branch}}'  # Scan each feature branch
-          directories:
-          - path: 'envs/feature-{{branchSlug}}'  # Check if overlay exists
-          requeueAfterSeconds: 180
+  # SCM Provider generator: Automatically discovers ALL feature/* branches
+  - scmProvider:
+      github:
+        organization: Maximusthefuture
+        api: https://api.github.com
+        tokenRef:
+          secretName: github-token
+          key: token
+        allBranches: true
+      filters:
+      - branchMatch: "^feature/.*"
+      requeueAfterSeconds: 180
   template:
     metadata:
-      name: 'preview-feature-{{branchSlug}}'
+      name: 'preview-{{branch_slug}}'
       labels:
         type: preview
-        environment: 'feature-{{branchSlug}}'
+        environment: '{{branch_slug}}'
         branch: '{{branch}}'
-        app.kubernetes.io/name: 'preview-feature-{{branchSlug}}'
+        app.kubernetes.io/name: 'preview-{{branch_slug}}'
       annotations:
         branch: '{{branch}}'
-        path: '{{path}}'
-        branchSlug: '{{branchSlug}}'
+        repository: '{{repository}}'
+        branch-slug: '{{branch_slug}}'
         argocd.argoproj.io/sync-wave: "0"
       finalizers:
       - resources-finalizer.argocd.argoproj.io
     spec:
       project: previews
       source:
-        repoURL: https://github.com/Maximusthefuture/gitops.git
+        repoURL: '{{url}}'
         targetRevision: '{{branch}}'  # Deploy from feature branch!
-        path: 'envs/feature-{{branchSlug}}'
+        path: base  # or 'envs/{{branch_slug}}' if overlay exists
       destination:
         server: https://kubernetes.default.svc
-        namespace: 'preview-feature-{{branchSlug}}'
+        namespace: 'preview-{{branch_slug}}'
       syncPolicy:
         automated:
           prune: true
