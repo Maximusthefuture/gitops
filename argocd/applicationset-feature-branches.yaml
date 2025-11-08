@@ -36,7 +36,7 @@ spec:
         # Если директория envs/feature-xxx, то ветка должна быть feature/xxx
         # Или можно использовать main для стабильной ветки с overlay директориями
         targetRevision: main
-        path: '{{path.path}}'
+        path: envs/{{path.basename}}
       destination:
         server: https://kubernetes.default.svc
         namespace: 'preview-{{path.basename}}'
