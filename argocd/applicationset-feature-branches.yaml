@@ -5,26 +5,44 @@ metadata:
   namespace: argocd
 spec:
   generators:
-  # Генератор на основе git веток
-  - git:
-      repoURL: https://github.com/Maximusthefuture/gitops.git
-      revision: main
-      directories:
-      - path: envs/feature-*
-      requeueAfterSeconds: 180
-  # Альтернативный генератор на основе списка веток (если git generator не работает)
-  # Можно использовать scmProvider или комбинировать с list generator
+  # Matrix generator: Combine list of branches with directory discovery
+  - matrix:
+      generators:
+      # Generator 1: List of feature branches to scan
+      - list:
+          elements:
+          - branch: feature/testik1
+            branchSlug: testik1
+          - branch: feature/auth
+            branchSlug: auth
+          - branch: feature/login
+            branchSlug: login
+          - branch: feature/new-test
+            branchSlug: new-test
+          - branch: feature/test-java-app
+            branchSlug: test-java-app
+          - branch: feature/demo-workflow
+            branchSlug: demo-workflow
+
+      # Generator 2: Check if overlay exists on that feature branch
+      - git:
+          repoURL: https://github.com/Maximusthefuture/gitops.git
+          revision: '{{branch}}'  # Scan each feature branch
+          directories:
+          - path: 'envs/feature-{{branchSlug}}'  # Check if overlay exists
+          requeueAfterSeconds: 180
   template:
     metadata:
-      name: 'preview-{{path.basename}}'
+      name: 'preview-feature-{{branchSlug}}'
       labels:
         type: preview
-        environment: '{{path.basename}}'
-        branch: '{{path.basename}}'
-        app.kubernetes.io/name: 'preview-{{path.basename}}'
+        environment: 'feature-{{branchSlug}}'
+        branch: '{{branch}}'
+        app.kubernetes.io/name: 'preview-feature-{{branchSlug}}'
       annotations:
-        branch: '{{path.basename}}'
-        path: '{{path.path}}'
+        branch: '{{branch}}'
+        path: '{{path}}'
+        branchSlug: '{{branchSlug}}'
         argocd.argoproj.io/sync-wave: "0"
       finalizers:
       - resources-finalizer.argocd.argoproj.io
@@ -32,14 +50,11 @@ spec:
       project: previews
       source:
         repoURL: https://github.com/Maximusthefuture/gitops.git
-        # Используем имя директории для определения ветки
-        # Если директория envs/feature-xxx, то ветка должна быть feature/xxx
-        # Или можно использовать main для стабильной ветки с overlay директориями
-        targetRevision: main
-        path: envs/{{path.basename}}
+        targetRevision: '{{branch}}'  # Deploy from feature branch!
+        path: 'envs/feature-{{branchSlug}}'
       destination:
         server: https://kubernetes.default.svc
-        namespace: 'preview-{{path.basename}}'
+        namespace: 'preview-feature-{{branchSlug}}'
       syncPolicy:
         automated:
           prune: true
